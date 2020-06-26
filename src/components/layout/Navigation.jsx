@@ -40,8 +40,9 @@ class AppNavigation extends Component {
 								variant='dark'
 								onClick={() => {
 									this.props.logout();
-									history.push('/login');
+									history.push('/');
 									this.setState({ isLogged: false });
+									window.location.reload(false);
 								}}
 							>
 								Logout

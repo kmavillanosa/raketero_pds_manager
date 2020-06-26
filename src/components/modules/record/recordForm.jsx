@@ -56,10 +56,12 @@ class RecordForm extends Component {
 	};
 
 	capture = () => {
-		const imageSrc = this.webcam.getScreenshot();
-		var savepath = 'demo.png';
-		saveAs(imageSrc, savepath);
-		this.setState({ img: savepath });
+		if (this.webcam) {
+			const imageSrc = this.webcam.getScreenshot();
+			var savepath = 'demo.png';
+			saveAs(imageSrc, savepath);
+			this.setState({ img: savepath });
+		}
 	};
 
 	render() {
@@ -190,6 +192,7 @@ class RecordForm extends Component {
 											Take Photo
 										</Button>
 										<Button
+											hidden={!this.state.isWebcam}
 											onClick={() => {
 												this.capture();
 												this.setState({ isWebcam: false });
@@ -453,7 +456,11 @@ class RecordForm extends Component {
 								</Card.Body>
 							</Card>
 							<Button type='submit' variant='success' className='float-right'>
-								{isSubmitting ? <Spinner animation='border' /> : 'Save Profile'}
+								{isSubmitting ? (
+									<Spinner size='sm' animation='border' />
+								) : (
+									'Save Profile'
+								)}
 							</Button>
 						</Form>
 					</Container>

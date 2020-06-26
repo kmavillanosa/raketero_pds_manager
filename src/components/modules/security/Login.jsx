@@ -49,7 +49,7 @@ class Login extends Component {
 				}) => (
 					<Form className='login-form-child' noValidate onSubmit={handleSubmit}>
 						<Form.Group as={Row}>
-							<img className='center' width='400' alt='logo' src={logo} />
+							<img className='center' alt='logo' src={logo} />
 							<Form.Label className='h3'>Login</Form.Label>
 						</Form.Group>
 						<Form.Group as={Row}>
