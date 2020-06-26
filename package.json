@@ -10,6 +10,7 @@
 		"axios": "^0.19.2",
 		"bootstrap": "^4.5.0",
 		"env-cmd": "^10.1.0",
+		"file-saver": "^2.0.2",
 		"formik": "^2.1.4",
 		"history": "^5.0.0",
 		"http-proxy-middleware": "^1.0.4",
@@ -43,6 +44,7 @@
 	"eslintConfig": {
 		"extends": "react-app"
 	},
+	"homepage": "./",
 	"browserslist": {
 		"production": [
 			">0.2%",

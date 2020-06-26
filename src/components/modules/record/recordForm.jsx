@@ -8,8 +8,8 @@ import {
 	Button,
 	Card,
 	Spinner,
-	Alert,
-	Row,
+	FormControl,
+	ButtonToolbar,
 } from 'react-bootstrap';
 import { Formik } from 'formik';
 import {
@@ -22,9 +22,12 @@ import Webcam from 'react-webcam';
 
 import { connect } from 'react-redux';
 import { AddAccount } from '../../../redux/actions/account_actions';
-import { createProfile } from '../../../redux/actions/profile_actions';
+import {
+	createProfile,
+	updateProfile,
+} from '../../../redux/actions/profile_actions';
 
-import { svg2png } from 'svg-png-converter';
+import { saveAs } from 'file-saver';
 
 class RecordForm extends Component {
 	state = {
@@ -54,62 +57,18 @@ class RecordForm extends Component {
 
 	capture = () => {
 		const imageSrc = this.webcam.getScreenshot();
-		console.log(imageSrc);
-
-		let outputBuffer = svg2png({
-			input: imageSrc,
-			encoding: 'buffer',
-			format: 'png',
-		});
-
-		alert(JSON.stringify(imageSrc));
-
-		this.setState({ img: imageSrc });
+		var savepath = 'demo.png';
+		saveAs(imageSrc, savepath);
+		this.setState({ img: savepath });
 	};
 
-	renderWebCam = () => {
+	render() {
 		const videoConstraints = {
 			width: 200,
 			height: 200,
 			facingMode: 'user',
 		};
 
-		return (
-			<Container className='d-inline'>
-				<Row>
-					<Col>
-						<img alt='img' src={this.state.img} />
-					</Col>
-				</Row>
-				<Row>
-					<Col>
-						<Webcam
-							screenshotFormat='image/png'
-							ref={this.setRef}
-							audio={false}
-							videoConstraints={videoConstraints}
-						/>
-					</Col>
-				</Row>
-				<Row>
-					<Col>
-						<Button
-							onClick={() => {
-								this.capture();
-							}}
-							size='sm'
-							variant='primary'
-							className='m-1'
-						>
-							Take Picture
-						</Button>
-					</Col>
-				</Row>
-			</Container>
-		);
-	};
-
-	render() {
 		return (
 			<Formik
 				validationSchema={
@@ -128,13 +87,9 @@ class RecordForm extends Component {
 							.then((r) => {
 								if (r.problem === null || r.status === 401) {
 									ToastsStore.success('Account Created!', 3000);
-									alert('Done Account');
 									this.props.createProfile(values).then((r) => {
 										ToastsStore.success('Profile Created!', 3000);
-										alert('Done Profile');
-										setTimeout(() => {
-											this.props.closeModal();
-										}, 1000);
+										this.props.closeModal();
 									});
 								} else {
 									action.setSubmitting(false);
@@ -217,40 +172,53 @@ class RecordForm extends Component {
 					isValid,
 					errors,
 					isSubmitting,
+					setValues,
 				}) => (
 					<Container>
 						<Form noValidate onSubmit={handleSubmit}>
-							<Card>
+							<Card hidden={this.props.mode !== 'add'}>
 								<Card.Body>
-									<Card.Title>Image</Card.Title>
-									<div>
-										<Button
-											size='sm'
-											variant='secondary'
-											className='m-1'
-											onClick={() => {
-												this.setState({ isWebcam: false });
-											}}
-										>
-											Upload Image
-										</Button>
+									<ButtonToolbar>
 										<Button
 											size='sm'
 											variant='secondary'
 											onClick={() => {
-												this.setState({ isWebcam: true });
+												this.setState({ isWebcam: !this.state.isWebcam });
 											}}
 											className='m-1'
 										>
 											Take Photo
 										</Button>
-									</div>
+										<Button
+											onClick={() => {
+												this.capture();
+												this.setState({ isWebcam: false });
+											}}
+											size='sm'
+											variant='primary'
+											className='m-1'
+										>
+											Take Picture
+										</Button>
+										<FormControl
+											hidden={this.state.img === null}
+											className='btn'
+											name='image_url'
+											id='image_url'
+											type='file'
+											onChange={handleChange}
+											// value={values.image_url ? values.image_url : ""}
+										/>
+									</ButtonToolbar>
 									{this.state.isWebcam ? (
-										this.renderWebCam()
+										<Webcam
+											screenshotFormat='image/png'
+											ref={this.setRef}
+											audio={false}
+											videoConstraints={videoConstraints}
+										/>
 									) : (
-										<Alert>
-											<Alert.Heading>Add Image</Alert.Heading>
-										</Alert>
+										''
 									)}
 								</Card.Body>
 							</Card>
@@ -500,6 +468,7 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = {
 	addAccount: AddAccount,
+	updateProfile: updateProfile,
 	createProfile: createProfile,
 };
 

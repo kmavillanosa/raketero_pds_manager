@@ -10,13 +10,9 @@ import {
 	Modal,
 } from 'react-bootstrap';
 import RecordForm from './recordForm';
-import {
-	GetAllProfiles,
-	DeleteProfile,
-} from '../../../redux/services/profile_service';
+import { GetAllProfiles } from '../../../redux/services/profile_service';
 import DataTable from '../../extensions/DataTable';
 import userdefault from '../../../images/userdefault.png';
-import { ToastsStore } from 'react-toasts';
 
 class Records extends Component {
 	state = {
