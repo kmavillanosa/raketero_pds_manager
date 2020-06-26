@@ -1,18 +1,32 @@
 /** @format */
 
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from 'react';
 
-function App() {
-	return (
-		<div className='App'>
-			<header className='App-header'>
-				<img src={logo} className='App-logo' alt='logo' />
-				<p>Kim The Real G</p>
-			</header>
-		</div>
-	);
+import './App.css';
+import Login from './components/modules/security/Login';
+import { connect } from 'react-redux';
+import AppLayout from './components/layout/AppLayout';
+
+class App extends Component {
+	render() {
+		return this.props.isLogged === true ||
+			localStorage.getItem('token') !== null ? (
+			<AppLayout />
+		) : (
+			<div>
+				<Login />
+			</div>
+		);
+	}
 }
 
-export default App;
+const mapStateToProps = (state) => {
+	return {
+		isLogged: state.profile.isLogged,
+	};
+};
+const mapDispatchToProps = (dispatch) => {
+	return {};
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
