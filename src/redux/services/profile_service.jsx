@@ -27,14 +27,15 @@ export const CreateProfile = (props) => {
 	params.append('zip_code', props.zip_code);
 	params.append('image_url', props.image_url);
 	params.append('contact_number', props.contact_number);
-	params.append('account_id', 1);
-	return WebClient.post(
-		`?${params.toString()}`,
-		{},
-		{
-			headers: { accept: '*/*' },
-		}
-	);
+	params.append('account_id', props.account_id);
+	params.append('status', props.status);
+
+	return WebClient.post('', JSON.stringify({}), {
+		params: params,
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+		},
+	});
 };
 
 export const UpdateProfile = (props) => {
@@ -53,8 +54,9 @@ export const UpdateProfile = (props) => {
 	params.append('zip_code', props.zip_code);
 	params.append('image_url', props.image_url);
 	params.append('contact_number', props.contact_number);
-	params.append('account_id', 1);
-	return WebClient.get(
+	params.append('user_id', props.user_id);
+	params.append('status', props.status);
+	return WebClient.post(
 		`?${params.toString()}`,
 		{},
 		{
@@ -69,7 +71,7 @@ export const DeleteProfile = (props) => {
 	params.append('type', 'profile-user');
 	params.append('action', 'delete');
 	params.append('account_id', props.account_id);
-	return WebClient.get(
+	return WebClient.post(
 		`?${params.toString()}`,
 		{},
 		{

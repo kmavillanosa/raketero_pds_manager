@@ -9,7 +9,9 @@ import {
 	Card,
 	Spinner,
 	FormControl,
-	ButtonToolbar,
+	Tabs,
+	Tab,
+	FormLabel,
 } from 'react-bootstrap';
 import { Formik } from 'formik';
 import {
@@ -18,19 +20,25 @@ import {
 } from '../../../validationRules/profileValidationRules';
 
 import { ToastsStore } from 'react-toasts';
-import Webcam from 'react-webcam';
 
 import { connect } from 'react-redux';
-import { AddAccount } from '../../../redux/actions/account_actions';
+import {
+	AddAccount,
+	ViewAccountDetailsByEmail,
+} from '../../../redux/actions/account_actions';
 import {
 	createProfile,
 	updateProfile,
 } from '../../../redux/actions/profile_actions';
-
+import { toastr } from 'react-redux-toastr';
 import { saveAs } from 'file-saver';
 
 class RecordForm extends Component {
 	state = {
+		isFetchingEmail: false,
+		account_index: 0,
+		account_id: null,
+		user_id: null,
 		isWebcam: false,
 		isLoading: false,
 		username: null,
@@ -47,6 +55,7 @@ class RecordForm extends Component {
 		image_url: null,
 		contact_number: null,
 		middlename: null,
+		status: 'PENDING',
 		img: null,
 	};
 
@@ -65,12 +74,6 @@ class RecordForm extends Component {
 	};
 
 	render() {
-		const videoConstraints = {
-			width: 200,
-			height: 200,
-			facingMode: 'user',
-		};
-
 		return (
 			<Formik
 				validationSchema={
@@ -80,33 +83,57 @@ class RecordForm extends Component {
 				}
 				onSubmit={(values, action) => {
 					if (this.props.mode === 'add') {
-						this.props
-							.addAccount({
-								username: values.username,
-								password: values.password,
-								email: values.email,
-							})
-							.then((r) => {
-								if (r.problem === null || r.status === 401) {
-									ToastsStore.success('Account Created!', 3000);
-									this.props.createProfile(values).then((r) => {
-										ToastsStore.success('Profile Created!', 3000);
-										this.props.closeModal();
-									});
-								} else {
-									action.setSubmitting(false);
-								}
+						if (this.state.account_index === 0) {
+							this.fileUpload(this.state.img);
+
+							values.image_url = '-';
+							this.props.createProfile(values).then((r) => {
+								ToastsStore.success('Profile Created!', 3000);
+								this.props.closeModal();
+								this.props.reload();
 							});
+						} else {
+							this.props
+								.addAccount({
+									username: values.username,
+									password: values.password,
+									email: values.email,
+								})
+								.then((r) => {
+									if ((r.problem === null) & (r.data.responsecode === 1)) {
+										this.fileUpload(this.state.img);
+
+										ToastsStore.success('Account Created!', 3000);
+										values.account_id = r.data.account_id;
+										values.image_url =
+											'https://raketero-app.com/staging/public/user-images/demo.png';
+										this.props.createProfile(values).then((r) => {
+											ToastsStore.success('Profile Created!', 3000);
+											this.props.closeModal();
+											this.props.reload();
+										});
+									} else {
+										action.setSubmitting(false);
+										ToastsStore.error('Request Failed!', r.problem, 3000);
+									}
+								});
+						}
 					} else {
 						this.props.updateProfile(values).then((r) => {
 							ToastsStore.success('Profile Modified!', 3000);
 							setTimeout(() => {
 								this.props.closeModal();
+								this.props.reload();
 							}, 1000);
 						});
 					}
 				}}
 				initialValues={{
+					account_id: null,
+					user_id:
+						this.props.mode === 'add'
+							? this.state.user_id
+							: this.props.item.user_id,
 					username:
 						this.props.mode === 'add'
 							? this.state.username
@@ -163,6 +190,10 @@ class RecordForm extends Component {
 						this.props.mode === 'add'
 							? this.state.middlename
 							: this.props.item.middlename,
+					status:
+						this.props.mode === 'add'
+							? this.state.status
+							: this.props.item.status,
 				}}
 			>
 				{({
@@ -178,9 +209,20 @@ class RecordForm extends Component {
 				}) => (
 					<Container>
 						<Form noValidate onSubmit={handleSubmit}>
-							<Card hidden={this.props.mode !== 'add'}>
+							{/* <Card hidden={this.props.mode !== 'add'}>
 								<Card.Body>
 									<ButtonToolbar>
+										<FormControl
+											className='btn'
+											name='image_url'
+											id='image_url'
+											type='file'
+											onChange={(e) => {
+												// this.setState({ img: e.target.files[0] });
+												console.log(e.target.files[0]);
+											}}
+											value={this.state.img}
+										/>
 										<Button
 											size='sm'
 											variant='secondary'
@@ -203,15 +245,6 @@ class RecordForm extends Component {
 										>
 											Take Picture
 										</Button>
-										<FormControl
-											hidden={this.state.img === null}
-											className='btn'
-											name='image_url'
-											id='image_url'
-											type='file'
-											onChange={handleChange}
-											// value={values.image_url ? values.image_url : ""}
-										/>
 									</ButtonToolbar>
 									{this.state.isWebcam ? (
 										<Webcam
@@ -224,61 +257,141 @@ class RecordForm extends Component {
 										''
 									)}
 								</Card.Body>
-							</Card>
-							<Card hidden={this.props.mode !== 'add'} className='border-0'>
-								<Card.Body>
-									<Card.Title>Account</Card.Title>
-									<Form.Row>
-										<Form.Group as={Col}>
-											<Form.Label>Email</Form.Label>
-											<Form.Control
+							</Card> */}
+							<Tabs
+								hidden={this.props.mode !== 'add'}
+								className='mt-3'
+								tabIndex={this.state.account_index}
+								onSelect={(e) => {
+									this.setState({ account_index: e });
+								}}
+							>
+								<Tab
+									hidden={this.props.mode !== 'add'}
+									title='I Have an existing account'
+									eventKey={0}
+								>
+									<Card className='border-0'>
+										<Card.Body>
+											<Card.Title>Search email</Card.Title>
+											<FormControl
 												type='text'
-												placeholder='Email'
 												name='email'
 												id='email'
 												value={values.email}
 												onChange={handleChange}
-												isInvalid={!!errors.email && touched.email}
+												className='m-1'
+												placeholder='Enter email address'
 											/>
-											<Form.Control.Feedback type='invalid'>
-												{errors.email}
-											</Form.Control.Feedback>
-										</Form.Group>
-									</Form.Row>
-									<Form.Row>
-										<Form.Group as={Col}>
-											<Form.Label>User Name</Form.Label>
-											<Form.Control
-												type='text'
-												placeholder='User Name'
-												name='username'
-												id='username'
-												value={values.username}
-												onChange={handleChange}
-												isInvalid={!!errors.username && touched.username}
-											/>
-											<Form.Control.Feedback type='invalid'>
-												{errors.username}
-											</Form.Control.Feedback>
-										</Form.Group>
-										<Form.Group as={Col}>
-											<Form.Label>Password</Form.Label>
-											<Form.Control
-												type='password'
-												placeholder='Desired Password'
-												name='password'
-												id='password'
-												value={values.password}
-												onChange={handleChange}
-												isInvalid={!!errors.password && touched.password}
-											/>
-											<Form.Control.Feedback type='invalid'>
-												{errors.password}
-											</Form.Control.Feedback>
-										</Form.Group>
-									</Form.Row>
-								</Card.Body>
-							</Card>
+
+											<FormLabel className='small'>
+												<span>User Name: </span>
+												<span>
+													<strong>{values.username}</strong>
+												</span>
+											</FormLabel>
+											<Button
+												onClick={() => {
+													this.setState({ isFetchingEmail: true });
+													this.props
+														.ViewAccountDetailsByEmail({
+															email: values.email,
+														})
+														.then((r) => {
+															if (r.data.data.length > 0) {
+																var response = r.data.data[0];
+
+																toastr.info(
+																	'Email found!',
+																	`Email ${response.email} exist in our records`
+																);
+																setValues({
+																	account_id: response.account_id,
+																	email: response.email,
+																	username: response.username,
+																	password: '12345',
+																});
+															} else {
+																toastr.error(
+																	'Email not found',
+																	'Seems like the account was not on our records'
+																);
+															}
+															this.setState({ isFetchingEmail: false });
+														});
+												}}
+												className='mt-1 float-right'
+											>
+												{this.state.isFetchingEmail ? (
+													<Spinner animation='border' height='sm' />
+												) : (
+													'Search'
+												)}
+											</Button>
+										</Card.Body>
+									</Card>
+								</Tab>
+								<Tab
+									hidden={this.props.mode !== 'add'}
+									title='New Account'
+									eventKey={1}
+								>
+									<Card className='border-0'>
+										<Card.Body>
+											<Card.Title>Account</Card.Title>
+											<Form.Row>
+												<Form.Group as={Col}>
+													<Form.Label>Email</Form.Label>
+													<Form.Control
+														type='text'
+														placeholder='Email'
+														name='email'
+														id='email'
+														value={values.email}
+														onChange={handleChange}
+														isInvalid={!!errors.email && touched.email}
+													/>
+													<Form.Control.Feedback type='invalid'>
+														{errors.email}
+													</Form.Control.Feedback>
+												</Form.Group>
+											</Form.Row>
+											<Form.Row>
+												<Form.Group as={Col}>
+													<Form.Label>User Name</Form.Label>
+													<Form.Control
+														type='text'
+														placeholder='User Name'
+														name='username'
+														id='username'
+														value={values.username}
+														onChange={handleChange}
+														isInvalid={!!errors.username && touched.username}
+													/>
+													<Form.Control.Feedback type='invalid'>
+														{errors.username}
+													</Form.Control.Feedback>
+												</Form.Group>
+												<Form.Group as={Col}>
+													<Form.Label>Password</Form.Label>
+													<Form.Control
+														type='password'
+														placeholder='Desired Password'
+														name='password'
+														id='password'
+														value={values.password}
+														onChange={handleChange}
+														isInvalid={!!errors.password && touched.password}
+													/>
+													<Form.Control.Feedback type='invalid'>
+														{errors.password}
+													</Form.Control.Feedback>
+												</Form.Group>
+											</Form.Row>
+										</Card.Body>
+									</Card>
+								</Tab>
+							</Tabs>
 							<Card className='border-0'>
 								<Card.Body>
 									<Card.Title>Profile</Card.Title>
@@ -453,15 +566,21 @@ class RecordForm extends Component {
 											</Form.Control.Feedback>
 										</Form.Group>
 									</Form.Row>
+									<Form.Row className='float-right'>
+										<Button
+											disabled={isSubmitting}
+											type='submit'
+											variant='success'
+										>
+											{isSubmitting ? (
+												<Spinner size='sm' animation='border' />
+											) : (
+												'Save Profile'
+											)}
+										</Button>
+									</Form.Row>
 								</Card.Body>
 							</Card>
-							<Button type='submit' variant='success' className='float-right'>
-								{isSubmitting ? (
-									<Spinner size='sm' animation='border' />
-								) : (
-									'Save Profile'
-								)}
-							</Button>
 						</Form>
 					</Container>
 				)}
@@ -477,6 +596,7 @@ const mapDispatchToProps = {
 	addAccount: AddAccount,
 	updateProfile: updateProfile,
 	createProfile: createProfile,
+	ViewAccountDetailsByEmail: ViewAccountDetailsByEmail,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RecordForm);

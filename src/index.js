@@ -11,27 +11,36 @@ import {
 	ToastsStore,
 	ToastsContainerPosition,
 } from 'react-toasts';
-
-import { BrowserRouter } from 'react-router-dom';
-
 import { history } from './history';
+
+import ReduxToastr from 'react-redux-toastr';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 import { Provider } from 'react-redux';
 
 import { store } from './redux';
+import 'react-redux-toastr/lib/css/react-redux-toastr.min.css';
 
 ReactDOM.render(
-	<div>
+	<Router history={history}>
 		<Provider store={store}>
-			<BrowserRouter history={history}>
-				<ToastsContainer
-					store={ToastsStore}
-					position={ToastsContainerPosition.BOTTOM_LEFT}
-				/>
-				<App />
-			</BrowserRouter>
+			<ReduxToastr
+				timeOut={4000}
+				newestOnTop={false}
+				preventDuplicates
+				position='top-right'
+				getState={(state) => state.toastr} // This is the default
+				transitionIn='fadeIn'
+				transitionOut='fadeOut'
+				closeOnToastrClick
+			/>
+			<ToastsContainer
+				store={ToastsStore}
+				position={ToastsContainerPosition.BOTTOM_LEFT}
+			/>
+			<App />
 		</Provider>
-	</div>,
+	</Router>,
 	document.getElementById('root')
 );
 

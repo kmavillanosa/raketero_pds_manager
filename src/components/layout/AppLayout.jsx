@@ -2,8 +2,9 @@
 
 import React, { Component } from 'react';
 import AppNavigation from './Navigation';
-import { Switch, Route } from 'react-router';
-import Records from '../modules/record/records';
+import { Switch, Route, Redirect } from 'react-router';
+import Records from '../modules/profiles/profilerecords';
+import AccountRecords from '../modules/account/accountRecords';
 
 class AppLayout extends Component {
 	render() {
@@ -11,8 +12,9 @@ class AppLayout extends Component {
 			<div>
 				<AppNavigation />
 				<Switch>
-					<Route location='/records' component={Records} />
-					<Route location='*' component={<p>Page Not Found</p>} />
+					<Route path='/profile' component={Records} />
+					<Route path='/accounts' component={AccountRecords} />
+					<Redirect from='/' to='/profile' />
 				</Switch>
 			</div>
 		);

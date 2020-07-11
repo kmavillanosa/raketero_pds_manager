@@ -7,6 +7,10 @@ export const apiServer = axios.create({
 });
 
 apiServer.interceptors.request.use((request) => {
+	request.headers = {
+		accept: 'application/json',
+	};
+
 	return request;
 });
 

@@ -5,6 +5,9 @@ import { actionTypes } from '../actions/actionTypes';
 const initialState = {
 	isLogged: false,
 	currentProfile: null,
+	accountCatalog: {
+		data: [],
+	},
 };
 
 export function profileReducer(state = initialState, action) {
@@ -18,6 +21,10 @@ export function profileReducer(state = initialState, action) {
 
 		case actionTypes.logout:
 			stateCopy.isLogged = false;
+			return stateCopy;
+
+		case actionTypes.getAccounts:
+			stateCopy.accountCatalog = action.payload;
 			return stateCopy;
 
 		default:

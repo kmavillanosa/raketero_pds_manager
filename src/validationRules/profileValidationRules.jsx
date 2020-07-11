@@ -7,9 +7,10 @@ export const ProfileCreateValidationRules = yup.object().shape({
 	email: yup
 		.string()
 		.email('Please provide valid email address')
+		.max(25)
 		.required('Please provide value')
 		.nullable(),
-	password: yup.string().required('Please provide value').nullable(),
+	password: yup.string().max(10).required('Please provide value').nullable(),
 	firstname: yup.string().required('Please provide value').nullable(),
 	lastname: yup.string().required('Please provide value').nullable(),
 	birthdate: yup.date().required('Please provide value').nullable(),
